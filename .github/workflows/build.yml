@@ -24,7 +24,7 @@ jobs:
       - name: Install host tools
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends cmake make git curl unzip bzip2 ca-certificates file
+          apt-get install -y --no-install-recommends cmake make g++ gcc git curl unzip bzip2 ca-certificates file
 
       - name: Install 3DS portlibs (zlib, libpng)
         run: |

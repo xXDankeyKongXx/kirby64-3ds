@@ -23,4 +23,13 @@ bt=$(find /tmp/dl/bannertool -type f -name 'bannertool*' -exec sh -c 'file "$1" 
 cp "$bt" /tmp/bin/bannertool
 chmod +x /tmp/bin/*
 file /tmp/bin/*
-/tmp/bin/makerom 2>&1 | head -2 || true
+
+# Prebuilt makerom may need a newer glibc than the container; build it from source if so.
+if ! /tmp/bin/makerom -help >/dev/null 2>&1 && /tmp/bin/makerom 2>&1 | grep -q GLIBC; then
+	echo "Prebuilt makerom incompatible; building from source ($MAKEROM_TAG)"
+	git clone -q --depth 1 -b "$MAKEROM_TAG" https://github.com/3DSGuy/Project_CTR /tmp/Project_CTR
+	make -C /tmp/Project_CTR/makerom deps -j"$(nproc)"
+	make -C /tmp/Project_CTR/makerom -j"$(nproc)"
+	cp "$(find /tmp/Project_CTR/makerom -type f -name makerom -perm -u+x | head -1)" /tmp/bin/makerom
+fi
+/tmp/bin/makerom 2>&1 | head -3 || true
