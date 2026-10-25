@@ -36,7 +36,8 @@ jobs:
         run: |
           bash tools/ci-run.sh '
           git clone https://github.com/masterfeizz/picaGL /tmp/picaGL
-          git -C /tmp/picaGL checkout "$PICAGL_COMMIT"
+          git -C /tmp/picaGL checkout -q "$PICAGL_COMMIT"
+          sed -i "s/-DARM11 -D_3DS/-D__3DS__/" /tmp/picaGL/Makefile
           make -C /tmp/picaGL install
           '
 
@@ -44,7 +45,7 @@ jobs:
         run: |
           bash tools/ci-run.sh '
           git clone https://github.com/masterfeizz/imgui-picaGL /tmp/imgui
-          git -C /tmp/imgui checkout "$IMGUI_COMMIT"
+          git -C /tmp/imgui checkout -q "$IMGUI_COMMIT"
           make -C /tmp/imgui install
           '
 
