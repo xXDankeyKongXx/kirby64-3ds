@@ -1,0 +1,25 @@
+KIRBY 64 - THE CRYSTAL SHARDS for 3DS
+======================================
+
+This app is the DaedalusX64 N64 emulator, set up to boot straight into
+Kirby 64. It does NOT include the game: you need your own ROM dump.
+
+1. Install the app
+   - Kirby64.cia : install with FBI (or another CIA installer). It shows up
+                   on the HOME Menu as "Kirby 64".
+   - Kirby64.3dsx: alternative, copy to sdmc:/3ds/ and run from the
+                   Homebrew Launcher.
+
+2. Put your ROM on the SD card
+   sdmc:/3ds/Kirby64/kirby64.z64
+
+   (.n64 and .v64 byte orders also work if named kirby64.n64 / kirby64.v64)
+
+3. DSP firmware (needed for sound and to start at all)
+   sdmc:/3ds/dspfirm.cdc
+   If you don't have it, run "DSP1" once from the Homebrew Launcher.
+
+Saves, settings and save states are kept in sdmc:/3ds/Kirby64/.
+
+Best played on a New 3DS / New 2DS (faster CPU, extra memory).
+Frameskip and other options are in the in-game menu.

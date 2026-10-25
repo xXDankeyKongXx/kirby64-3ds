@@ -1,0 +1,94 @@
+name: Build Kirby 64 3DS
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: devkitpro/devkitarm:latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PICAGL_COMMIT: 39039f3a40d4e5bc6c69aac96668401d121c002b
+      IMGUI_COMMIT: b77470554867235f5a23a16a12388667096b4ecb
+      MAKEROM_TAG: makerom-v0.19.0
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install host tools
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends cmake make git curl unzip bzip2 ca-certificates file
+
+      - name: Install 3DS portlibs (zlib, libpng)
+        run: |
+          dkp-pacman -Sy --noconfirm --needed 3ds-zlib 3ds-libpng
+
+      - name: Build and install picaGL
+        run: |
+          git clone https://github.com/masterfeizz/picaGL /tmp/picaGL
+          git -C /tmp/picaGL checkout "$PICAGL_COMMIT"
+          make -C /tmp/picaGL install
+
+      - name: Build and install imgui (picaGL backend)
+        run: |
+          git clone https://github.com/masterfeizz/imgui-picaGL /tmp/imgui
+          git -C /tmp/imgui checkout "$IMGUI_COMMIT"
+          make -C /tmp/imgui install
+
+      - name: Fetch makerom and bannertool
+        run: |
+          mkdir -p /tmp/bin /tmp/dl
+          api() { curl -fsSL -H "Authorization: Bearer $GH_TOKEN" "$1"; }
+
+          url=$(api "https://api.github.com/repos/3DSGuy/Project_CTR/releases/tags/$MAKEROM_TAG" \
+                | grep -o '"browser_download_url": *"[^"]*makerom[^"]*\(ubuntu\|linux\)[^"]*x86_64[^"]*"' \
+                | head -1 | sed 's/.*"\(https[^"]*\)"/\1/')
+          echo "makerom: $url"
+          curl -fsSL -o /tmp/dl/makerom.zip "$url"
+          unzip -o -q /tmp/dl/makerom.zip -d /tmp/dl/makerom
+
+          url=$(api "https://api.github.com/repos/Steveice10/bannertool/releases/latest" \
+                | grep -o '"browser_download_url": *"[^"]*\.zip"' \
+                | head -1 | sed 's/.*"\(https[^"]*\)"/\1/')
+          echo "bannertool: $url"
+          curl -fsSL -o /tmp/dl/bannertool.zip "$url"
+          unzip -o -q /tmp/dl/bannertool.zip -d /tmp/dl/bannertool
+
+          cp "$(find /tmp/dl/makerom -type f -name makerom | head -1)" /tmp/bin/makerom
+          cp "$(find /tmp/dl/bannertool -type f -path '*linux*x86_64*' -name bannertool | head -1)" /tmp/bin/bannertool
+          chmod +x /tmp/bin/*
+          file /tmp/bin/*
+          echo "/tmp/bin" >> "$GITHUB_PATH"
+
+      - name: Build emulator core
+        run: |
+          mkdir -p daedbuild && cd daedbuild
+          cmake -DCTR_RELEASE=1 ../Source -DCMAKE_TOOLCHAIN_FILE=../Tools/3dstoolchain.cmake -G "Unix Makefiles"
+          make -j"$(nproc)"
+
+      - name: Package 3DSX and CIA
+        run: |
+          export PATH="$DEVKITPRO/tools/bin:$PATH"
+          bash tools/package.sh daedbuild/DaedalusX64.elf dist
+          cp docs/INSTALL.txt dist/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Kirby64-3DS
+          path: dist/
+
+      - name: Publish release (tags only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/Kirby64.cia
+            dist/Kirby64.3dsx
+            dist/INSTALL.txt
