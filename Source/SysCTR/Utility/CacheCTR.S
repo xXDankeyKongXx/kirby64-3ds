@@ -11,7 +11,11 @@ _ClearCacheKernel:
 	mcr p15, 0, r0, c7, c10, 4	@ Data Sync Barrier
 	bx lr
 
+@ Kirby 64 3DS: use Luma3DS's cache SVCs (also implemented by Azahar/Citra)
+@ instead of running kernel code through svcCustomBackdoor (0x80), which
+@ emulators don't support. Same effect: clean D-cache, invalidate I-cache.
 _InvalidateAndFlushCaches:
-	ldr r0, =_ClearCacheKernel
-	svc 0x80					@ svcCustomBackdoor
-	bx lr
+	push {r4, lr}
+	svc 0x92					@ svcFlushEntireDataCache
+	svc 0x94					@ svcInvalidateEntireInstructionCache
+	pop {r4, pc}
