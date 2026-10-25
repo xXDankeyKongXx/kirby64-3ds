@@ -15,7 +15,7 @@ jobs:
     container: devkitpro/devkitarm:latest
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      PICAGL_COMMIT: 39039f3a40d4e5bc6c69aac96668401d121c002b
+      PICAGL_COMMIT: a10b1ce1ec2cd38a2ee3adf1033d9c789d103a31  # "revamp" branch (has pglInitEx)
       IMGUI_COMMIT: b77470554867235f5a23a16a12388667096b4ecb
       MAKEROM_TAG: makerom-v0.19.0
     steps:
@@ -35,7 +35,7 @@ jobs:
       - name: Build and install picaGL
         run: |
           bash tools/ci-run.sh '
-          git clone https://github.com/masterfeizz/picaGL /tmp/picaGL
+          git clone -b revamp https://github.com/masterfeizz/picaGL /tmp/picaGL
           git -C /tmp/picaGL checkout -q "$PICAGL_COMMIT"
           sed -i "s/-DARM11 -D_3DS/-D__3DS__/" /tmp/picaGL/Makefile
           make -C /tmp/picaGL install
@@ -46,7 +46,6 @@ jobs:
           bash tools/ci-run.sh '
           git clone https://github.com/masterfeizz/imgui-picaGL /tmp/imgui
           git -C /tmp/imgui checkout -q "$IMGUI_COMMIT"
-          sed -i "s/glLockArrays(/glLockArraysEXT(/" /tmp/imgui/imgui_impl_opengl2.cpp
           make -C /tmp/imgui install
           '
 
