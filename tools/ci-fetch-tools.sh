@@ -25,7 +25,8 @@ chmod +x /tmp/bin/*
 file /tmp/bin/*
 
 # Prebuilt makerom may need a newer glibc than the container; build it from source if so.
-if ! /tmp/bin/makerom -help >/dev/null 2>&1 && /tmp/bin/makerom 2>&1 | grep -q GLIBC; then
+mr_out=$(/tmp/bin/makerom 2>&1 || true)
+if grep -q GLIBC <<<"$mr_out"; then
 	echo "Prebuilt makerom incompatible; building from source ($MAKEROM_TAG)"
 	git clone -q --depth 1 -b "$MAKEROM_TAG" https://github.com/3DSGuy/Project_CTR /tmp/Project_CTR
 	make -C /tmp/Project_CTR/makerom deps -j"$(nproc)"
