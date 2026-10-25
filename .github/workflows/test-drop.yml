@@ -14,16 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Collect files
-        run: |
-          set -e
-          mkdir -p drop
-          gh api repos/azahar-emu/azahar/releases/latest --jq '.tag_name, (.assets[].name)' | tee drop/azahar-assets.txt
-          name=$(grep -iE 'linux' drop/azahar-assets.txt | grep -iE '\.AppImage$' | grep -viE 'room|aarch64|arm64' | head -1)
-          echo "Using $name"
-          gh release download -R azahar-emu/azahar -p "$name" -D drop
-          gh release download -R ${{ github.repository }} -p 'Kirby64.*' -D drop
-          ls -la drop
-          echo "::notice title=Drop::$(ls drop | tr '\n' ' ')"
+        run: bash tools/ci-run.sh "bash tools/ci-test-drop.sh"
       - name: Push to test-drop branch
         run: |
           set -e
