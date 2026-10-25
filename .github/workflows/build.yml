@@ -70,6 +70,13 @@ jobs:
           cp docs/INSTALL.txt dist/
           '
 
+      - name: Verify CIA
+        run: |
+          hdr=$(od -An -tx4 -N4 dist/Kirby64.cia | tr -d ' ')
+          info="CIA header size=0x$hdr (expect 0x00002020); $(stat -c '%n %s bytes' dist/Kirby64.cia dist/Kirby64.3dsx | tr '\n' ';') $(grep -a -o 'CTR-P-KB64' dist/Kirby64.cia | head -1)"
+          echo "::notice title=Package check::$info"
+          [ "$hdr" = "00002020" ]
+
       - uses: actions/upload-artifact@v4
         with:
           name: Kirby64-3DS
