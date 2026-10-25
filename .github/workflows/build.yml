@@ -46,6 +46,7 @@ jobs:
           bash tools/ci-run.sh '
           git clone https://github.com/masterfeizz/imgui-picaGL /tmp/imgui
           git -C /tmp/imgui checkout -q "$IMGUI_COMMIT"
+          sed -i "s/glLockArrays(/glLockArraysEXT(/" /tmp/imgui/imgui_impl_opengl2.cpp
           make -C /tmp/imgui install
           '
 
