@@ -28,56 +28,46 @@ jobs:
 
       - name: Install 3DS portlibs (zlib, libpng)
         run: |
+          bash tools/ci-run.sh '
           dkp-pacman -Sy --noconfirm --needed 3ds-zlib 3ds-libpng
+          '
 
       - name: Build and install picaGL
         run: |
+          bash tools/ci-run.sh '
           git clone https://github.com/masterfeizz/picaGL /tmp/picaGL
           git -C /tmp/picaGL checkout "$PICAGL_COMMIT"
           make -C /tmp/picaGL install
+          '
 
       - name: Build and install imgui (picaGL backend)
         run: |
+          bash tools/ci-run.sh '
           git clone https://github.com/masterfeizz/imgui-picaGL /tmp/imgui
           git -C /tmp/imgui checkout "$IMGUI_COMMIT"
           make -C /tmp/imgui install
+          '
 
       - name: Fetch makerom and bannertool
         run: |
-          mkdir -p /tmp/bin /tmp/dl
-          api() { curl -fsSL -H "Authorization: Bearer $GH_TOKEN" "$1"; }
-
-          url=$(api "https://api.github.com/repos/3DSGuy/Project_CTR/releases/tags/$MAKEROM_TAG" \
-                | grep -o '"browser_download_url": *"[^"]*makerom[^"]*\(ubuntu\|linux\)[^"]*x86_64[^"]*"' \
-                | head -1 | sed 's/.*"\(https[^"]*\)"/\1/')
-          echo "makerom: $url"
-          curl -fsSL -o /tmp/dl/makerom.zip "$url"
-          unzip -o -q /tmp/dl/makerom.zip -d /tmp/dl/makerom
-
-          url=$(api "https://api.github.com/repos/Steveice10/bannertool/releases/latest" \
-                | grep -o '"browser_download_url": *"[^"]*\.zip"' \
-                | head -1 | sed 's/.*"\(https[^"]*\)"/\1/')
-          echo "bannertool: $url"
-          curl -fsSL -o /tmp/dl/bannertool.zip "$url"
-          unzip -o -q /tmp/dl/bannertool.zip -d /tmp/dl/bannertool
-
-          cp "$(find /tmp/dl/makerom -type f -name makerom | head -1)" /tmp/bin/makerom
-          cp "$(find /tmp/dl/bannertool -type f -path '*linux*x86_64*' -name bannertool | head -1)" /tmp/bin/bannertool
-          chmod +x /tmp/bin/*
-          file /tmp/bin/*
+          bash tools/ci-run.sh "bash tools/ci-fetch-tools.sh"
           echo "/tmp/bin" >> "$GITHUB_PATH"
 
       - name: Build emulator core
         run: |
+          bash tools/ci-run.sh '
           mkdir -p daedbuild && cd daedbuild
           cmake -DCTR_RELEASE=1 ../Source -DCMAKE_TOOLCHAIN_FILE=../Tools/3dstoolchain.cmake -G "Unix Makefiles"
           make -j"$(nproc)"
+          '
 
       - name: Package 3DSX and CIA
         run: |
+          bash tools/ci-run.sh '
           export PATH="$DEVKITPRO/tools/bin:$PATH"
           bash tools/package.sh daedbuild/DaedalusX64.elf dist
           cp docs/INSTALL.txt dist/
+          '
 
       - uses: actions/upload-artifact@v4
         with:
