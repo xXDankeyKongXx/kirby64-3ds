@@ -11,7 +11,7 @@ echo "using: $url"
 curl -fsSL -o /tmp/dl/makerom.zip "$url"
 unzip -o -q /tmp/dl/makerom.zip -d /tmp/dl/makerom
 
-echo "bannertool assets:"; api "https://api.github.com/repos/Steveice10/bannertool/releases/latest" | pick | tee /tmp/dl/bt.txt
+echo "bannertool assets:"; api "https://api.github.com/repos/diasurgical/bannertool/releases/latest" | pick | tee /tmp/dl/bt.txt
 url=$(grep -i '\.zip$' /tmp/dl/bt.txt | head -1)
 echo "using: $url"
 curl -fsSL -o /tmp/dl/bannertool.zip "$url"
@@ -19,7 +19,8 @@ unzip -o -q /tmp/dl/bannertool.zip -d /tmp/dl/bannertool
 find /tmp/dl/makerom /tmp/dl/bannertool -type f
 
 cp "$(find /tmp/dl/makerom -type f -name 'makerom*' ! -name '*.zip' | head -1)" /tmp/bin/makerom
-cp "$(find /tmp/dl/bannertool -type f -ipath '*linux*' -name 'bannertool*' | grep -iE 'x86_64|x64|amd64' | head -1)" /tmp/bin/bannertool
+bt=$(find /tmp/dl/bannertool -type f -name 'bannertool*' -exec sh -c 'file "$1" | grep -q "ELF 64-bit.*x86-64" && echo "$1"' _ {} \; | head -1)
+cp "$bt" /tmp/bin/bannertool
 chmod +x /tmp/bin/*
 file /tmp/bin/*
 /tmp/bin/makerom 2>&1 | head -2 || true
