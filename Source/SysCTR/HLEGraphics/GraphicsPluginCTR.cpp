@@ -37,6 +37,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Utility/Timing.h"
 
 #include "Core/Memory.h"
+#include "SysCTR/Utility/PerfCTR.h"
 
 //#define DAEDALUS_FRAMERATE_ANALYSIS
 
@@ -165,6 +166,7 @@ bool CGraphicsPluginImpl::Initialise()
 
 void CGraphicsPluginImpl::ProcessDList()
 {
+	PerfScope perf(PERF_DLIST);
 #ifdef DAEDALUS_DEBUG_DISPLAYLIST
 	if (!DLDebugger_Process())
 	{
@@ -189,6 +191,8 @@ void CGraphicsPluginImpl::UpdateScreen()
 	
 	if( current_origin != LastOrigin)
 	{
+		Perf_EndFrame();
+
 		if( gGlobalPreferences.DisplayFramerate )
 			UpdateFramerate();
 

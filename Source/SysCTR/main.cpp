@@ -154,11 +154,10 @@ static void Initialize()
 	APT_CheckNew3DS(&isN3DS);
 	osSetSpeedupEnable(true);
 	
+	// Kirby 64 3DS: no 800px wide mode - picaGL renders the top screen at 400x240, so in wide
+	// mode the picture landed off-centre and cut off
 	gfxInit(GSP_BGR8_OES, GSP_BGR8_OES, true);
 
-	if(isN3DS)
-		gfxSetWide(true);
-	
 	pglInitEx(0x080000, 0x040000);
 
 	IO::Directory::EnsureExists( DAEDALUS_CTR_PATH("") );

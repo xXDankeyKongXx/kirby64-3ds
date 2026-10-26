@@ -5,3 +5,4 @@ dist/
 *.v64
 *.cia
 *.3dsx
+deps/

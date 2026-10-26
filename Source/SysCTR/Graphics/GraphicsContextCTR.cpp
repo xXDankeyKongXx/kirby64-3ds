@@ -16,6 +16,7 @@
 #include "Utility/VolatileMem.h"
 
 #include "SysCTR/UI/InGameMenu.h"
+#include "SysCTR/Utility/PerfCTR.h"
 
 extern void HandleEndOfFrame();
 
@@ -23,6 +24,7 @@ extern void HandleEndOfFrame();
 #define SCR_HEIGHT 240
 
 static bool newFrame = true;
+static bool bottomDrawn = false; // the menu was redrawn this frame, so the bottom screen needs showing
 
 uint32_t  gVertexCount = 0;
 
@@ -175,7 +177,10 @@ void IGraphicsContext::BeginFrame()
 {
 	if(newFrame)
 	{
-		UI::DrawInGameMenu();
+		{
+			PerfScope perf(PERF_MENU);
+			bottomDrawn = UI::DrawInGameMenu();
+		}
 		ClearToBlack();
 		newFrame = false;
 	}
@@ -196,7 +201,11 @@ void IGraphicsContext::EndFrame()
 
 void IGraphicsContext::UpdateFrame(bool wait_for_vbl)
 {
-	pglSwapBuffers();
+	{
+		PerfScope perf(PERF_GPU_WAIT);
+		pglSwapBuffersEx(true, bottomDrawn);
+	}
+	bottomDrawn = false;
 
 	newFrame = true;
 }

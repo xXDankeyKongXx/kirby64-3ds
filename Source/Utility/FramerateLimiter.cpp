@@ -18,6 +18,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 #include "stdafx.h"
+#ifdef DAEDALUS_CTR
+#include "SysCTR/Utility/PerfCTR.h"
+#endif
 #include "FramerateLimiter.h"
 
 #include "Utility/Timing.h"
@@ -122,6 +125,9 @@ void FramerateLimiter_Limit()
 		if( delay_ticks > 0 )
 		{
 			//printf( "Delay ticks: %d\n", delay_ticks );
+#ifdef DAEDALUS_CTR
+			PerfScope perf(PERF_IDLE);
+#endif
 			ThreadSleepTicks( delay_ticks );
 			NTiming::GetPreciseTime(&now);
 		}

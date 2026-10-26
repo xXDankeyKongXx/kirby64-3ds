@@ -22,6 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "AudioOutput.h"
 
 #include <stdio.h>
+#include <string.h>
 #include <new>
 
 #include <3ds.h>
@@ -62,6 +63,13 @@ static void audioCallback(void *arg)
 
 		if(samples_written != 0)
 			waveBuf[waveBuf_id].nsamples = samples_written;
+		else
+		{
+			// Kirby 64 3DS: nothing ready (a slow frame) - play a short silence rather than the
+			// buffer's old contents again, which buzzed
+			memset(waveBuf[waveBuf_id].data_pcm16, 0, CTR_NUM_SAMPLES << 2);
+			waveBuf[waveBuf_id].nsamples = CTR_NUM_SAMPLES / 4;
+		}
 
 		DSP_FlushDataCache(waveBuf[waveBuf_id].data_pcm16, CTR_NUM_SAMPLES << 2);
 		ndspChnWaveBufAdd( 0, &waveBuf[waveBuf_id] );

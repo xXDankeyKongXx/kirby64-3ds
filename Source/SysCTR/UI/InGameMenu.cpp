@@ -29,6 +29,7 @@
 #include "Utility/Translate.h"
 #include "Utility/ROMFile.h"
 #include "Utility/Timer.h"
+#include "SysCTR/Utility/PerfCTR.h"
 
 extern float gCurrentFramerate;
 extern EFrameskipValue gFrameskipValue;
@@ -318,6 +319,14 @@ static void showFPS()
 	ImGui::BeginTooltip();
 	ImGui::Text("FPS: %.2f", gCurrentFramerate);
 	ImGui::End();
+
+	// Kirby 64 3DS: where the frame time goes (SysCTR/Utility/PerfCTR.h), along the bottom edge
+	ImGui::SetNextWindowPos( ImVec2(0, 222) );
+	ImGui::SetNextWindowSize( ImVec2(320, 18) );
+	ImGui::BeginTooltip();
+	ImGui::SetWindowFontScale(0.8f);
+	ImGui::TextUnformatted(Perf_Text());
+	ImGui::End();
 	ImGui::PopStyleVar();
 }
 
@@ -375,8 +384,16 @@ static void DrawMainPage()
 	ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
 }
 
-void UI::DrawInGameMenu()
+bool UI::DrawInGameMenu()
 {
+	// Kirby 64 3DS: the menu costs the main core a few ms a frame, so on the main page it's
+	// redrawn only while it's being touched (and for a moment after) and twice a second for the
+	// FPS; otherwise the bottom screen keeps showing the last one
+	static u32 sinceTouch = 1000, frame = 0;
+	sinceTouch = (hidKeysHeld() & KEY_TOUCH) ? 0 : sinceTouch + 1;
+	if(currentPage == 0 && sinceTouch > 20 && ++frame % 15 != 0)
+		return false;
+
 	UI::RestoreRenderState();
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -390,4 +407,5 @@ void UI::DrawInGameMenu()
 	}
 
 	pglSelectScreen(GFX_TOP, GFX_LEFT);
+	return true;
 }

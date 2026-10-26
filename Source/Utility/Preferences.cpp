@@ -46,9 +46,21 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #if defined(DAEDALUS_PSP) || defined(VITA)
 static const EAudioPluginMode      kDefaultAudioPluginMode      = APM_DISABLED;
 static const ETextureHashFrequency kDefaultTextureHashFrequency = THF_DISABLED;
+#elif defined(DAEDALUS_CTR)
+// Kirby 64 3DS: audio on the New 3DS's spare core (sync on Old 3DS), textures re-checked every
+// 4th frame instead of every frame - both cost the main core several ms per frame
+static const EAudioPluginMode      kDefaultAudioPluginMode      = APM_ENABLED_ASYNC;
+static const ETextureHashFrequency kDefaultTextureHashFrequency = THF_EVERY_4;
 #else
 static const EAudioPluginMode      kDefaultAudioPluginMode      = APM_ENABLED_SYNC;
 static const ETextureHashFrequency kDefaultTextureHashFrequency = THF_EVERY_FRAME;
+#endif
+
+// Kirby 64 3DS: the dynarec keeps registers cached through loops that branch to themselves
+#ifdef DAEDALUS_CTR
+static const bool                  kDefaultDynarecLoopOptimisation = true;
+#else
+static const bool                  kDefaultDynarecLoopOptimisation = false;
 #endif
 
 static u32						GetTexureHashFrequencyAsFrames( ETextureHashFrequency thf );
@@ -429,7 +441,7 @@ void SGlobalPreferences::Apply() const
 SRomPreferences::SRomPreferences()
 	:	PatchesEnabled( true )
 	,	DynarecEnabled( true )
-	,	DynarecLoopOptimisation( false )
+	,	DynarecLoopOptimisation( kDefaultDynarecLoopOptimisation )
 	,	DynarecDoublesOptimisation( true )
 	,	DoubleDisplayEnabled( true )
 	,	CleanSceneEnabled( false )
@@ -454,7 +466,7 @@ void SRomPreferences::Reset()
 	PatchesEnabled             = true;
 	SpeedSyncEnabled           = 1;
 	DynarecEnabled             = true;
-	DynarecLoopOptimisation    = false;
+	DynarecLoopOptimisation    = kDefaultDynarecLoopOptimisation;
 	DynarecDoublesOptimisation = true;
 	DoubleDisplayEnabled       = true;
 	CleanSceneEnabled          = false;

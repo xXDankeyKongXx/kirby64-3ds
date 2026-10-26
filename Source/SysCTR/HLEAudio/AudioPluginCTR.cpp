@@ -38,6 +38,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Core/Memory.h"
 #include "Core/ROM.h"
 #include "Core/RSP_HLE.h"
+#include "SysCTR/Utility/PerfCTR.h"
 
 #define RSP_AUDIO_INTR_CYCLES     1
 
@@ -50,6 +51,9 @@ static bool _runThread = false;
 
 static Thread asyncThread;
 static Handle audioRequest;
+// Kirby 64 3DS: set while no async job is running. The game is told a job is done straight
+// away, so the next one waits here for the previous one rather than overlapping it
+static LightEvent audioIdle;
 
 static void asyncProcess(void *arg)
 {
@@ -57,6 +61,7 @@ static void asyncProcess(void *arg)
 	{
 		svcWaitSynchronization(audioRequest, U64_MAX);
 		if(_runThread) Audio_Ucode();
+		LightEvent_Signal(&audioIdle);
 	}
 }
 
@@ -78,6 +83,8 @@ CAudioPluginCTR::CAudioPluginCTR()
 		_runThread = true;
 
 		svcCreateEvent(&audioRequest, RESET_ONESHOT);
+		LightEvent_Init(&audioIdle, RESET_ONESHOT);
+		LightEvent_Signal(&audioIdle);
 		asyncThread = threadCreate(asyncProcess, 0, (8 * 1024), 0x18, 2, true);
 	}
 }
@@ -186,7 +193,11 @@ EProcessResult	CAudioPluginCTR::ProcessAList()
 			result = PR_COMPLETED;
 			break;
 		case APM_ENABLED_ASYNC:
-			if(isN3DS) {
+			if(isN3DS && asyncThread != NULL) {
+				{
+					PerfScope perf(PERF_AUDIO);
+					LightEvent_Wait(&audioIdle);
+				}
 				svcSignalEvent(audioRequest);
 
 				CPU_AddEvent(RSP_AUDIO_INTR_CYCLES, CPU_EVENT_AUDIO);
@@ -194,12 +205,16 @@ EProcessResult	CAudioPluginCTR::ProcessAList()
 			}
 			else
 			{
+				PerfScope perf(PERF_AUDIO);
 				Audio_Ucode();
 				result = PR_COMPLETED;
 			}
 			break;
 		case APM_ENABLED_SYNC:
+		{
+			PerfScope perf(PERF_AUDIO);
 			Audio_Ucode();
+		}
 			result = PR_COMPLETED;
 			break;
 	}
