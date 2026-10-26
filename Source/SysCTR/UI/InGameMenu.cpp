@@ -321,10 +321,11 @@ static void showFPS()
 	ImGui::End();
 
 	// Kirby 64 3DS: where the frame time goes (SysCTR/Utility/PerfCTR.h), along the bottom edge
-	ImGui::SetNextWindowPos( ImVec2(0, 222) );
-	ImGui::SetNextWindowSize( ImVec2(320, 18) );
-	ImGui::BeginTooltip();
-	ImGui::SetWindowFontScale(0.8f);
+	ImGui::SetNextWindowPos( ImVec2(0, 218) );
+	ImGui::SetNextWindowSize( ImVec2(320, 22) );
+	ImGui::Begin("##perf", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+		ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar);
+	ImGui::SetWindowFontScale(0.75f);
 	ImGui::TextUnformatted(Perf_Text());
 	ImGui::End();
 	ImGui::PopStyleVar();
