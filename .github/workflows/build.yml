@@ -2,7 +2,7 @@ name: Build Kirby 64 3DS
 
 on:
   push:
-    branches: [main]
+    branches: [main, 30fps]
     tags: ['v*']
   workflow_dispatch:
 
@@ -83,7 +83,7 @@ jobs:
           path: dist/
 
       - name: Publish release
-        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/30fps' || startsWith(github.ref, 'refs/tags/v'))
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('build-{0}', github.run_number) }}
@@ -91,7 +91,7 @@ jobs:
           target_commitish: ${{ github.sha }}
           make_latest: true
           body: |
-            Automated build of commit ${{ github.sha }}.
+            Automated build of commit ${{ github.sha }} (branch ${{ github.ref_name }}).
             Install Kirby64.cia with FBI, then put your own ROM at sdmc:/3ds/Kirby64/kirby64.z64. See INSTALL.txt.
           files: |
             dist/Kirby64.cia
